@@ -1,0 +1,112 @@
+library(xml2)
+library(rvest)
+alamat_website <-"https://www.imdb.com/search/title/?title_type=feature&release_date=2017-01-01,2017-12-31&user_rating=5.0,10.0&count=100"
+website <-read_html(alamat_website)
+website
+#Runtime
+runtime_data_website <-html_nodes(website, ".runtime")
+runtime_data_website
+data_runtime <-html_text(runtime_data_website)
+data_runtime
+data_runtime <-gsub(" min","",data_runtime)
+data_runtime
+data_runtime <-as.numeric(data_runtime)
+data_runtime
+var(data_runtime)
+sd(data_runtime)
+modus_runtime <-function(data_runtime){
+  unik_runtime <-unique(data_runtime)
+  tabel_runtime <-table(data_runtime)
+  sort(unik_runtime)[tabel_runtime == max(tabel_runtime)]
+}
+modus_runtime(data_runtime)
+#Genre
+genre_data_website <-html_nodes(website, ".genre")
+genre_data_website
+data_genre <-html_text(genre_data_website)
+data_genre
+data_genre <-gsub("\n","",data_genre)
+data_genre
+data_genre <-gsub(" ","",data_genre)
+data_genre <-gsub(",.*","",data_genre)
+data_genre
+data_genre <-as.factor(data_genre)
+data_genre
+#Rating
+rating_data_website <-html_nodes(website, ".ratings-imdb-rating strong")
+rating_data_website
+data_rating <-html_text(rating_data_website)
+data_rating
+data_rating<- as.numeric(data_rating)
+data_rating
+var(data_rating)
+sd(data_rating)
+modus_rating <-function(data_rating){
+  unik_rating <-unique(data_rating)
+  tabel_rating <-table(data_rating)
+  sort(unik_rating)[tabel_rating == max(tabel_rating)]
+}
+modus_rating(data_rating)
+#Gross
+gross_data_website<- html_nodes(website, ".ghost~ .text-muted+ span")
+gross_data_website
+data_gross<- html_text(gross_data_website)
+data_gross
+data_gross<- gsub("M","",data_gross)
+data_gross
+data_gross<- substring(data_gross,2,6)
+data_gross
+#cek jumlah data_gross
+length(data_gross)
+#Data yang tidak ada diganti dengan nilai "NA"
+for (i in c(49,53,59,60,61,64,64,67,71,72,86,88,92,97)){
+  a<- data_gross[1:(i-1)]
+  b<- data_gross[i:length(data_gross)]
+  data_gross<- append(a,list("NULL"))
+  data_gross<- append(data_gross,b)
+}
+data_gross<- as.numeric(data_gross)
+data_gross
+var(data_gross)
+sd(data_gross)
+modus_gross <-function(data_gross){
+  unik_gross <-unique(data_gross)
+  tabel_gross <-table(data_gross)
+  sort(unik_gross)[tabel_gross == max(tabel_gross)]
+}
+modus_gross(data_gross)
+#Ouput
+data_film <-data.frame(Runtime = data_runtime,
+                                Genre = data_genre, Rating = data_rating,
+                                Gross_Pendapatan = data_gross)
+str(data_film)
+#Tabel data_film
+data_film
+summary(data_film)
+#Histogram
+library("ggplot2")
+qplot(data = data_film,Rating,fill = Genre,bins = 30)
+qplot(data = data_film,Gross_Pendapatan,fill = Genre,bins = 30)
+qplot(data = data_film,Runtime,fill = Genre,bins = 30)
+#Scatterplot
+ggplot(data_film,aes(x=Runtime,y=Gross_Pendapatan))+
+  geom_point(aes(size=Rating,col=Genre))+
+  labs(title = "Scatterplot Data Film",
+       y = "Gross Pendapatan")
+#Diagram Batang
+ggplot(data = data_film, mapping = aes(x = Genre, y = Gross_Pendapatan)) + 
+  geom_bar(stat = "identity")+
+  theme(axis.text.x = element_text(angle = 90))+
+  labs(title = "Diagram Batang Data Film Genre dengan Gross Pendapatan",
+       y = "Gross Pendapatan")
+
+ggplot(data = data_film, mapping = aes(x = Genre, y = Rating, fill=Genre)) + 
+  geom_bar(stat = "identity")+
+  theme(axis.text.x = element_text(angle = 90))+
+  labs(title = "Diagram Batang Data Film Genre dengan Rating",
+       y = "Rating")
+
+#Boxplot
+ggplot(data = data_film, mapping = aes(x = Genre, y = Gross_Pendapatan)) +
+  geom_boxplot(aes(col=Genre)) +
+  coord_flip()
